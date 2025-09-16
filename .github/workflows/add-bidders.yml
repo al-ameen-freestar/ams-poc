@@ -17,19 +17,19 @@ jobs:
     name: Automate bidder additions (POC)
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ secrets.MULTI_REPO_TOKEN != '' && secrets.MULTI_REPO_TOKEN || github.token }}
+      GH_TOKEN: ${{ secrets.PRIVATE_GH_TOKEN != '' && secrets.PRIVATE_GH_TOKEN || github.token }}
       BASE_BRANCH: main
       BIDDERS_INPUT: ${{ inputs.bidders }}
       PREBID_REPO: al-ameen-freestar/pbjs-poc
       PUBFIG_REPO: al-ameen-freestar/pfig-poc
     steps:
       - name: Checkout AMS POC
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Checkout Prebid POC
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ env.PREBID_REPO }}
           path: Prebid.js
@@ -38,7 +38,7 @@ jobs:
           token: ${{ env.GH_TOKEN }}
 
       - name: Checkout pubfig POC
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ env.PUBFIG_REPO }}
           path: pubfig.js
