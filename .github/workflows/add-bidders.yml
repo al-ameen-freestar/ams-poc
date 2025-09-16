@@ -27,6 +27,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          persist-credentials: true
 
       - name: Checkout Prebid POC
         uses: actions/checkout@v5
@@ -36,6 +37,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.BASE_BRANCH }}
           token: ${{ env.CI_GH_TOKEN }}
+          persist-credentials: true
 
 
       - name: Checkout pubfig POC
@@ -46,6 +48,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.BASE_BRANCH }}
           token: ${{ env.CI_GH_TOKEN }}
+          persist-credentials: true
 
 
       - name: Set up Python
@@ -64,6 +67,10 @@ jobs:
 
       - name: Configure gh for git pushes
         run: gh auth setup-git
+
+      - name: Force https pushes to use CI token
+        run: |
+          git config --global url."https://x-access-token:${CI_GH_TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - name: Show inputs
         run: |
