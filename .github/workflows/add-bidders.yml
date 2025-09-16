@@ -69,6 +69,10 @@ jobs:
           echo "PREBID_REPO=$PREBID_REPO"
           echo "PUBFIG_REPO=$PUBFIG_REPO"
 
+      - name: Configure git to use CI token
+        run: |
+          git config --global url."https://${{ env.CI_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
       - name: Run automation script (updates files, creates branches, commits, pushes, opens PRs)
         run: |
           python scripts/automate_bid_adapter.py \
