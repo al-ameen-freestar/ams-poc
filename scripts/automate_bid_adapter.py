@@ -57,16 +57,16 @@ def update_prebid_modules(prebid_repo: Path, bidders: List[str]) -> bool:
     return changed
 
 
-def update_pubfig_modules(pubfig_repo: Path, bidders: List[str]) -> bool:
-    candidates = [pubfig_repo / "modules.json", pubfig_repo / "Prebid.js" / "modules.json"]
-    changed_any = False
-    for file_path in candidates:
-        if file_path.exists():
-            changed = False
-            for bidder in bidders:
-                changed |= ensure_line_in_json_array(file_path, f"{bidder}BidAdapter")
-            changed_any |= changed
-    return changed_any
+def sync_pubfig_submodule_to_prebid_sha(pubfig_repo: Path, submodule_path: str, target_sha: str) -> bool:
+    gitmodules = pubfig_repo / ".gitmodules"
+    if not gitmodules.exists():
+        return False
+    run(["git", "submodule", "update", "--init", submodule_path], cwd=pubfig_repo)
+    run(["git", "-C", submodule_path, "fetch", "--all"], cwd=pubfig_repo)
+    run(["git", "-C", submodule_path, "checkout", target_sha], cwd=pubfig_repo)
+    run(["git", "add", submodule_path], cwd=pubfig_repo)
+    status = run(["git", "status", "--porcelain"], cwd=pubfig_repo).stdout.strip()
+    return bool(status)
 
 
 def read_text(p: Path) -> str:
@@ -172,7 +172,6 @@ def main():
     gh_login_from_env()
 
     prebid_changed = update_prebid_modules(prebid_repo, bidders)
-    pubfig_changed = update_pubfig_modules(pubfig_repo, bidders)
     ams_changed = update_ams_helper(ams_repo, bidders)
 
     suffix = "-".join(sorted(set(bidders)))
@@ -185,10 +184,13 @@ def main():
     pr = gh_open_pr(prebid_repo, title, "Automated POC change to include new bidders in Prebid build modules.", args.base_branch, branch_name) if git_commit_push(prebid_repo, branch_name, title) else ""
     results["prebid-poc"] = {"changed": prebid_changed, "pr": pr}
 
+    prebid_sha = run(["git", "rev-parse", "HEAD"], cwd=prebid_repo).stdout.strip()
+
     git_prepare_branch(pubfig_repo, args.base_branch, branch_name)
-    title = f"chore: mirror bidders {', '.join(bidders)} in pubfig Prebid modules.json"
-    pr = gh_open_pr(pubfig_repo, title, "Automated POC change to keep pubfig Prebid modules list in sync.", args.base_branch, branch_name) if git_commit_push(pubfig_repo, branch_name, title) else ""
-    results["pubfig-poc"] = {"changed": pubfig_changed, "pr": pr}
+    sub_changed = sync_pubfig_submodule_to_prebid_sha(pubfig_repo, "Prebid.js", prebid_sha)
+    title = f"chore: sync Prebid.js submodule to {prebid_sha[:7]}"
+    pr = gh_open_pr(pubfig_repo, title, "Automated POC change to sync Prebid submodule to latest modules.json changes.", args.base_branch, branch_name) if git_commit_push(pubfig_repo, branch_name, title) else ""
+    results["pubfig-poc"] = {"changed": sub_changed, "pr": pr, "prebid_sha": prebid_sha}
 
     git_prepare_branch(ams_repo, args.base_branch, branch_name)
     title = f"chore: add bidders {', '.join(bidders)} to PrebidModulesHelper"
