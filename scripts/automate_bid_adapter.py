@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List, Optional
 
 
-def run(cmd: List[str], cwd: Optional[Path] = None, check: bool = True, input_str: Optional[str] = None) -> subprocess.CompletedProcess:
+def run(cmd: List[str], cwd: Optional[Path] = None, check: bool = True, input_str: Optional[str] = None, env: Optional[dict] = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         cmd,
         cwd=cwd,
@@ -18,6 +18,7 @@ def run(cmd: List[str], cwd: Optional[Path] = None, check: bool = True, input_st
         input=input_str,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        env=env,
     )
 
 
@@ -141,19 +142,7 @@ def git_commit_push(repo: Path, branch: str, title: str) -> bool:
         return False
     run(["git", "add", "-A"], cwd=repo)
     run(["git", "commit", "-m", title], cwd=repo)
-    try:
-        run(["git", "push", "-u", "origin", branch], cwd=repo)
-    except subprocess.CalledProcessError:
-        token = os.environ.get("CI_GH_TOKEN") or os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-        if not token:
-            raise
-        origin_url = run(["git", "remote", "get-url", "origin"], cwd=repo).stdout.strip()
-        if "github.com/" in origin_url:
-            owner_repo = origin_url.split("github.com/")[-1].rstrip(".git")
-            authed_remote = f"https://x-access-token:{token}@github.com/{owner_repo}.git"
-            run(["git", "push", "-u", authed_remote, f"HEAD:refs/heads/{branch}"], cwd=repo)
-        else:
-            run(["git", "push", "-u", "origin", branch], cwd=repo)
+    run(["git", "push", "-u", "origin", branch], cwd=repo)
     return True
 
 
