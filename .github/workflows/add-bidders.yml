@@ -24,31 +24,35 @@ jobs:
       PUBFIG_REPO: al-ameen-freestar/pfig-poc
     steps:
       - name: Checkout AMS POC
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # use default credential persistence
+          persist-credentials: false
+          token: ${{ secrets.PRIVATE_GH_TOKEN }}
 
       - name: Checkout this repo (no persisted creds)
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+          token: ${{ secrets.PRIVATE_GH_TOKEN }}
 
       - name: Checkout target repo with PAT
         uses: actions/checkout@v4
         with:
           repository: ${{ env.PREBID_REPO }}
           path: Prebid.js
+          persist-credentials: false
           token: ${{ secrets.PRIVATE_GH_TOKEN }}
 
       - name: Checkout pubfig POC
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           repository: ${{ env.PUBFIG_REPO }}
           path: pubfig.js
           fetch-depth: 0
           ref: ${{ env.BASE_BRANCH }}
-          token: ${{ env.CI_GH_TOKEN }}
+          persist-credentials: false
+          token: ${{ secrets.PRIVATE_GH_TOKEN }}
 
 
       - name: Set up Python
