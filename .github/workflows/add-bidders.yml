@@ -1,0 +1,73 @@
+name: Add Prebid bidders across repos (POC)
+
+on:
+  workflow_dispatch:
+    inputs:
+      bidders:
+        description: "Comma-separated slugs or JSON array of bidder slugs (e.g. 'kargo, teads' or ['kargo','teads'])"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automate:
+    name: Automate bidder additions (POC)
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.MULTI_REPO_TOKEN != '' && secrets.MULTI_REPO_TOKEN || github.token }}
+      BASE_BRANCH: main
+      BIDDERS_INPUT: ${{ inputs.bidders }}
+    steps:
+      - name: Checkout AMS POC
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout Prebid POC
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/prebid-poc
+          path: Prebid.js
+          fetch-depth: 0
+
+      - name: Checkout pubfig POC
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/pubfig-poc
+          path: pubfig.js
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Configure git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Authenticate gh
+        run: |
+          echo "$GH_TOKEN" | gh auth login --with-token
+
+      - name: Show inputs
+        run: |
+          echo "BIDDERS_INPUT=$BIDDERS_INPUT"
+          echo "BASE_BRANCH=$BASE_BRANCH"
+
+      - name: Run automation script (updates files, creates branches, commits, pushes, opens PRs)
+        env:
+          GH_TOKEN: ${{ env.GH_TOKEN }}
+        run: |
+          python scripts/automate_bid_adapter.py \
+            --bidders "$BIDDERS_INPUT" \
+            --prebid-repo "$(pwd)/Prebid.js" \
+            --pubfig-repo "$(pwd)/pubfig.js" \
+            --ams-repo "$(pwd)" \
+            --base-branch "$BASE_BRANCH"
+
+
