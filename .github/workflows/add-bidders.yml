@@ -29,15 +29,17 @@ jobs:
           fetch-depth: 0
           # use default credential persistence
 
-      - name: Checkout Prebid POC
-        uses: actions/checkout@v5
+      - name: Checkout this repo (no persisted creds)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Checkout target repo with PAT
+        uses: actions/checkout@v4
         with:
           repository: ${{ env.PREBID_REPO }}
           path: Prebid.js
-          fetch-depth: 0
-          ref: ${{ env.BASE_BRANCH }}
-          token: ${{ env.CI_GH_TOKEN }}
-
+          token: ${{ secrets.PRIVATE_GH_TOKEN }}
 
       - name: Checkout pubfig POC
         uses: actions/checkout@v5
@@ -54,10 +56,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Configure git user
+      - name: Git identity
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Authenticate gh
         run: echo "$CI_GH_TOKEN" | gh auth login --with-token
