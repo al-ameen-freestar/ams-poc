@@ -141,6 +141,18 @@ def git_commit_push(repo: Path, branch: str, title: str) -> bool:
         return False
     run(["git", "add", "-A"], cwd=repo)
     run(["git", "commit", "-m", title], cwd=repo)
+    # Ensure remote uses token if provided
+    token = os.environ.get("CI_GH_TOKEN") or os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        try:
+            origin_url = run(["git", "remote", "get-url", "origin"], cwd=repo).stdout.strip()
+            if origin_url.startswith("https://github.com/"):
+                # Inject token for push
+                owner_repo = origin_url.split("https://github.com/")[-1].rstrip(".git")
+                authed = f"https://x-access-token:{token}@github.com/{owner_repo}.git"
+                run(["git", "remote", "set-url", "origin", authed], cwd=repo)
+        except Exception:
+            pass
     run(["git", "push", "-u", "origin", branch], cwd=repo)
     return True
 
