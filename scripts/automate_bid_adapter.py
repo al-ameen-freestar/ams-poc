@@ -10,16 +10,34 @@ from typing import List, Optional
 
 
 def run(cmd: List[str], cwd: Optional[Path] = None, check: bool = True, input_str: Optional[str] = None, env: Optional[dict] = None) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        cmd,
-        cwd=cwd,
-        check=check,
-        text=True,
-        input=input_str,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env,
-    )
+    try:
+        return subprocess.run(
+            cmd,
+            cwd=cwd,
+            check=check,
+            text=True,
+            input=input_str,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=env,
+        )
+    except subprocess.CalledProcessError as e:
+        try:
+            cmd_str = " ".join(e.cmd if isinstance(e.cmd, list) else [str(e.cmd)])
+        except Exception:
+            cmd_str = str(e.cmd)
+        sys.stderr.write("\n".join([
+            "[run] Command failed",
+            f"[run] cwd: {str(cwd) if cwd else os.getcwd()}",
+            f"[run] cmd: {cmd_str}",
+            f"[run] exit_code: {e.returncode}",
+            "[run] --- stdout ---",
+            e.stdout or "",
+            "[run] --- stderr ---",
+            e.stderr or "",
+            "[run] ---------------",
+        ]) + "\n")
+        raise
 
 
 def parse_bidders(raw: str) -> List[str]:
