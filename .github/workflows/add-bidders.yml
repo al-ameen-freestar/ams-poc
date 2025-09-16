@@ -17,7 +17,7 @@ jobs:
     name: Automate bidder additions (POC)
     runs-on: ubuntu-latest
     env:
-      CI_GH_TOKEN: ${{ secrets.PRIVATE_GH_TOKEN != '' && secrets.PRIVATE_GH_TOKEN || github.token }}
+      CI_GH_TOKEN: ${{ secrets.PRIVATE_GH_TOKEN }}
       BASE_BRANCH: main
       BIDDERS_INPUT: ${{ inputs.bidders }}
       PREBID_REPO: al-ameen-freestar/pbjs-poc
@@ -28,13 +28,13 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-          token: ${{ secrets.PRIVATE_GH_TOKEN }}
+          token: ${{ env.CI_GH_TOKEN }}
 
       - name: Checkout this repo (no persisted creds)
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-          token: ${{ secrets.PRIVATE_GH_TOKEN }}
+          token: ${{ env.CI_GH_TOKEN }}
 
       - name: Checkout target repo with PAT
         uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
           repository: ${{ env.PREBID_REPO }}
           path: Prebid.js
           persist-credentials: false
-          token: ${{ secrets.PRIVATE_GH_TOKEN }}
+          token: ${{ env.CI_GH_TOKEN }}
 
       - name: Checkout pubfig POC
         uses: actions/checkout@v4
@@ -52,7 +52,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.BASE_BRANCH }}
           persist-credentials: false
-          token: ${{ secrets.PRIVATE_GH_TOKEN }}
+          token: ${{ env.CI_GH_TOKEN }}
 
 
       - name: Set up Python
