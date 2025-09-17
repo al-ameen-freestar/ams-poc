@@ -6,8 +6,8 @@ import java.util.Set;
 
 public class PrebidModulesHelper {
     static final String[] NETWORK_SLUGS_WITH_BID_ADAPTERS = new String[]{
-            "appnexus"
-    };
+			"appnexus", "flipp"
+		};
 
     public static Set<String> getPrebidModulesBySiteConfig() {
         return new HashSet<>(Arrays.asList(NETWORK_SLUGS_WITH_BID_ADAPTERS));
