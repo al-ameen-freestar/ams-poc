@@ -22,12 +22,20 @@ jobs:
       BIDDERS_INPUT: ${{ inputs.bidders }}
       PREBID_REPO: al-ameen-freestar/pbjs-poc
       PUBFIG_REPO: al-ameen-freestar/pfig-poc
+      WORKSPACE: ${{ github.workspace }}
     steps:
+      # Create directories for each repo at workspace root
+      - name: Create workspace structure
+        run: |
+          mkdir -p $WORKSPACE/ams-poc
+          mkdir -p $WORKSPACE/pbjs-poc
+          mkdir -p $WORKSPACE/pfig-poc
+
       - name: Checkout AMS POC
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # use default credential persistence
+          path: ams-poc
 
       - name: Checkout Prebid POC
         uses: actions/checkout@v4
@@ -43,7 +51,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.PUBFIG_REPO }}
-          path: pubfig.js
+          path: pfig-poc
           fetch-depth: 0
           ref: ${{ env.BASE_BRANCH }}
           persist-credentials: false
@@ -76,11 +84,11 @@ jobs:
 
       - name: Run automation script (updates files, creates branches, commits, pushes, opens PRs)
         run: |
-          python scripts/automate_bid_adapter.py \
+          python ams-poc/scripts/automate_bid_adapter.py \
             --bidders "$BIDDERS_INPUT" \
-            --prebid-repo "$(pwd)/pbjs-poc" \
-            --pubfig-repo "$(pwd)/pubfig.js" \
-            --ams-repo "$(pwd)" \
+            --prebid-repo "$WORKSPACE/pbjs-poc" \
+            --pubfig-repo "$WORKSPACE/pfig-poc" \
+            --ams-repo "$WORKSPACE/ams-poc" \
             --base-branch "$BASE_BRANCH"
 
 
