@@ -206,8 +206,8 @@ def main():
     prebid_sha = run(["git", "rev-parse", "HEAD"], cwd=prebid_repo).stdout.strip()
 
     git_prepare_branch(pubfig_repo, args.base_branch, branch_name)
-    sub_changed = sync_pubfig_submodule_to_prebid_sha(pubfig_repo, "Prebid.js", prebid_sha)
-    title = f"chore: sync Prebid.js submodule to {prebid_sha[:7]}"
+    sub_changed = sync_pubfig_submodule_to_prebid_sha(pubfig_repo, "pbjs-poc", prebid_sha)
+    title = f"chore: sync pbjs-poc submodule to {prebid_sha[:7]}"
     pr = gh_open_pr(pubfig_repo, title, "Automated POC change to sync Prebid submodule to latest modules.json changes.", args.base_branch, branch_name) if git_commit_push(pubfig_repo, branch_name, title) else ""
     results["pubfig-poc"] = {"changed": sub_changed, "pr": pr, "prebid_sha": prebid_sha}
 
